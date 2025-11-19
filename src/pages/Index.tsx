@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import DoctorProfile from "@/components/DoctorProfile";
 import UploadArea from "@/components/UploadArea";
 import ResultsPanel from "@/components/ResultsPanel";
+import VisualizationPanel from "@/components/VisualizationPanel";
 import StatsPanel from "@/components/StatsPanel";
 import LoadingOverlay from "@/components/LoadingOverlay";
 
@@ -43,6 +44,7 @@ const Index = () => {
   
   // Image upload and analysis state
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [heatmapImage, setHeatmapImage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   
@@ -102,6 +104,9 @@ const Index = () => {
       // Mock API call - replace with real endpoint
       const result = await mockApiCall(file);
       setAnalysisResult(result);
+      
+      // Set mock heatmap image (in production, this would come from the API)
+      setHeatmapImage("/src/assets/sample_heatmap.png");
       
       // Add to scanned images history
       const newScan: ScannedImage = {
@@ -163,7 +168,7 @@ const Index = () => {
               />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
               {/* Upload Section */}
               <UploadArea
                 onImageUpload={handleImageUpload}
@@ -176,6 +181,16 @@ const Index = () => {
                 confidence={analysisResult?.confidence || null}
               />
             </div>
+
+            {/* Detailed Visualization Section */}
+            {analysisResult && (
+              <VisualizationPanel 
+                originalImage={uploadedImage}
+                heatmapImage={heatmapImage}
+                result={analysisResult.result}
+                confidence={analysisResult.confidence}
+              />
+            )}
           </>
         )}
       </main>
