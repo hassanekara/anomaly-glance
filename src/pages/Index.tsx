@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import Header from "@/components/Header";
-import LoginModal from "@/components/LoginModal";
 import DoctorProfile from "@/components/DoctorProfile";
 import UploadArea from "@/components/UploadArea";
 import ResultsPanel from "@/components/ResultsPanel";
@@ -25,27 +25,21 @@ interface ScannedImage {
  * Anomaly Detection Dashboard - Main Page
  * 
  * Features:
- * - Doctor login/profile management (frontend-only, mock authentication)
- * - Image upload and analysis
+ * - Protected route requiring authentication
+ * - Image upload and analysis (supports 3D medical formats: .nii, .nii.gz, .hdr/.img)
  * - Results display with confidence scores
  * - Statistics dashboard
- * - Scanned images history for logged-in doctors
+ * - Scanned images history for authenticated doctors
  * 
  * TODO for backend integration:
- * - Connect authentication to real API endpoint
  * - Store scanned images in database
  * - Fetch doctor profile and scanned images from backend
  * - Implement real anomaly detection API call
+ * - Process 3D medical volumes (convert to 2D slices for preview)
  */
 const Index = () => {
-  // Authentication state (mock - frontend only)
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [showLoginModal, setShowLoginModal] = useState(false);
+  const { user } = useAuth();
   const [showProfile, setShowProfile] = useState(false);
-  const [doctorInfo, setDoctorInfo] = useState({
-    name: "",
-    email: "",
-  });
   
   // Image upload and analysis state
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
@@ -62,47 +56,6 @@ const Index = () => {
     averageConfidence: 91,
   });
 
-  /**
-   * Mock Login Handler
-   * Frontend-only authentication simulation
-   * 
-   * TODO: Replace with real authentication API call
-   * Example:
-   * const response = await fetch('/api/auth/login', {
-   *   method: 'POST',
-   *   body: JSON.stringify({ email, password })
-   * });
-   */
-  const handleLogin = (email: string, password: string) => {
-    // Mock authentication - accepts any valid email/password
-    setIsLoggedIn(true);
-    setDoctorInfo({
-      name: email.split("@")[0],
-      email: email,
-    });
-    setShowLoginModal(false);
-    
-    toast({
-      title: "Login Successful",
-      description: `Welcome, Dr. ${email.split("@")[0]}!`,
-    });
-  };
-
-  /**
-   * Logout Handler
-   * Clears authentication state
-   */
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    setDoctorInfo({ name: "", email: "" });
-    setShowProfile(false);
-    setScannedImages([]);
-    
-    toast({
-      title: "Logged Out",
-      description: "You have been successfully logged out.",
-    });
-  };
 
   /**
    * Mock API Call for Image Analysis
@@ -134,42 +87,46 @@ const Index = () => {
 
   /**
    * Image Upload Handler
-   * Processes uploaded image and triggers analysis
+   * Processes uploaded file and triggers mock analysis
+   * Supports 3D medical imaging formats (.nii, .nii.gz, .hdr/.img)
    */
   const handleImageUpload = async (file: File) => {
+    // Create preview URL for standard images
+    // For 3D formats, this would need processing to extract a 2D slice
     const imageUrl = URL.createObjectURL(file);
     setUploadedImage(imageUrl);
     setIsLoading(true);
     setAnalysisResult(null);
 
     try {
+      // Mock API call - replace with real endpoint
       const result = await mockApiCall(file);
       setAnalysisResult(result);
       
-      // Add to scanned images history if user is logged in
-      if (isLoggedIn) {
-        const newScan: ScannedImage = {
-          id: Date.now().toString(),
-          imageUrl,
-          result: result.result,
-          confidence: result.confidence,
-          date: new Date().toLocaleDateString(),
-        };
-        setScannedImages((prev) => [newScan, ...prev]);
-        setStats((prev) => ({
-          ...prev,
-          totalAnalyzed: prev.totalAnalyzed + 1,
-        }));
-      }
+      // Add to scanned images history
+      const newScan: ScannedImage = {
+        id: Date.now().toString(),
+        imageUrl,
+        result: result.result,
+        confidence: result.confidence,
+        date: new Date().toLocaleDateString(),
+      };
+      setScannedImages((prev) => [newScan, ...prev]);
       
+      // Update stats
+      setStats((prev) => ({
+        ...prev,
+        totalAnalyzed: prev.totalAnalyzed + 1,
+      }));
+
       toast({
         title: "Analysis Complete",
         description: `Result: ${result.result} (${result.confidence}% confidence)`,
       });
     } catch (error) {
       toast({
-        title: "Analysis Failed",
-        description: "Please try again later.",
+        title: "Error",
+        description: "Failed to analyze image. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -179,70 +136,55 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header with Logo and Login */}
-      <Header
-        onLoginClick={() => {
-          if (isLoggedIn) {
-            setShowProfile(!showProfile);
-          } else {
-            setShowLoginModal(true);
-          }
-        }}
-        isLoggedIn={isLoggedIn}
-        doctorName={doctorInfo.name}
-      />
-
-      {/* Login Modal */}
-      <LoginModal
-        isOpen={showLoginModal}
-        onClose={() => setShowLoginModal(false)}
-        onLogin={handleLogin}
+      {/* Header with logo, branding, and logout */}
+      <Header 
+        onProfileClick={() => setShowProfile(!showProfile)}
       />
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
-        <div className="space-y-6">
-          {/* Show Profile View if logged in and profile is open */}
-          {isLoggedIn && showProfile ? (
-            <DoctorProfile
-              doctorName={doctorInfo.name}
-              email={doctorInfo.email}
-              scannedImages={scannedImages}
-              onLogout={handleLogout}
-            />
-          ) : (
-            <>
-              {/* Statistics Panel */}
+        {showProfile ? (
+          // Doctor Profile View
+          <DoctorProfile
+            doctorName={user?.fullName || ""}
+            email={user?.email || ""}
+            scannedImages={scannedImages}
+            onLogout={() => setShowProfile(false)}
+          />
+        ) : (
+          // Dashboard View
+          <>
+            {/* Statistics Panel */}
+            <div className="mb-8">
               <StatsPanel
                 totalAnalyzed={stats.totalAnalyzed}
                 anomalyPercentage={stats.anomalyPercentage}
                 averageConfidence={stats.averageConfidence}
               />
+            </div>
 
-              {/* Upload Area */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Upload Section */}
               <UploadArea
                 onImageUpload={handleImageUpload}
                 uploadedImage={uploadedImage}
               />
 
-              {/* Loading State */}
-              {isLoading && <LoadingOverlay />}
-
               {/* Results Section */}
-              {analysisResult && !isLoading && (
-                <div className="space-y-6 animate-in fade-in duration-500">
-                  <ResultsPanel
-                    result={analysisResult.result}
-                    confidence={analysisResult.confidence}
-                  />
-                </div>
-              )}
-            </>
-          )}
-        </div>
+              <ResultsPanel 
+                result={analysisResult?.result || null}
+                confidence={analysisResult?.confidence || null}
+              />
+            </div>
+          </>
+        )}
       </main>
+
+      {/* Loading Overlay */}
+      {isLoading && <LoadingOverlay />}
     </div>
   );
 };
 
 export default Index;
+

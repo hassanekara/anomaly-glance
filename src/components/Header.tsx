@@ -1,49 +1,63 @@
 import { Button } from "@/components/ui/button";
-import { UserCircle } from "lucide-react";
+import { LogOut, UserCircle } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 import logo from "@/assets/medtech-logo.png";
 
 interface HeaderProps {
-  onLoginClick: () => void;
-  isLoggedIn: boolean;
-  doctorName?: string;
+  onProfileClick: () => void;
 }
 
 /**
  * Header Component
  * 
- * Displays the MediTech Innov logo and doctor login/profile button.
- * - Logo is positioned on the left
- * - Login/Profile button is positioned on the right
+ * Displays the MediTech Innov logo, app name, slogan, and user profile/logout buttons.
+ * - Logo and branding are positioned on the left
+ * - User actions are positioned on the right
  */
-const Header = ({ onLoginClick, isLoggedIn, doctorName }: HeaderProps) => {
+const Header = ({ onProfileClick }: HeaderProps) => {
+  const { user, logout } = useAuth();
+
   return (
     <header className="border-b border-border bg-card shadow-sm">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-          {/* Logo Section - Left */}
-          <div className="flex items-center gap-3">
+          {/* Logo & Branding Section - Left */}
+          <div className="flex items-center gap-4">
             <img 
               src={logo} 
               alt="MediTech Innov Logo" 
               className="h-12 w-auto object-contain"
             />
+            <div className="hidden md:block">
+              <h1 className="text-xl font-bold text-foreground">MedTech Innovation</h1>
+              <p className="text-xs text-muted-foreground">Detect, Diagnose, and Defend</p>
+            </div>
           </div>
 
-          {/* Doctor Login/Profile Section - Right */}
+          {/* User Actions Section - Right */}
           <div className="flex items-center gap-3">
-            {isLoggedIn && doctorName && (
+            {user && (
               <span className="text-sm text-muted-foreground hidden sm:inline">
-                Dr. {doctorName}
+                {user.fullName}
               </span>
             )}
             <Button
               variant="outline"
               size="sm"
-              onClick={onLoginClick}
+              onClick={onProfileClick}
               className="gap-2"
             >
               <UserCircle className="w-4 h-4" />
-              {isLoggedIn ? "Profile" : "Doctor Login"}
+              Profile
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={logout}
+              className="gap-2"
+            >
+              <LogOut className="w-4 h-4" />
+              <span className="hidden sm:inline">Logout</span>
             </Button>
           </div>
         </div>

@@ -20,13 +20,30 @@ const UploadArea = ({ onImageUpload, uploadedImage }: UploadAreaProps) => {
     setIsDragging(false);
   }, []);
 
+  const isValidMedicalImage = (file: File) => {
+    const validExtensions = ['.nii', '.nii.gz', '.hdr', '.img'];
+    const fileName = file.name.toLowerCase();
+    
+    // Check for 3D medical imaging formats
+    if (validExtensions.some(ext => fileName.endsWith(ext))) {
+      return true;
+    }
+    
+    // Check for standard image formats
+    if (file.type.startsWith("image/")) {
+      return true;
+    }
+    
+    return false;
+  };
+
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
       setIsDragging(false);
 
       const file = e.dataTransfer.files[0];
-      if (file && file.type.startsWith("image/")) {
+      if (file && isValidMedicalImage(file)) {
         onImageUpload(file);
       }
     },
@@ -36,7 +53,7 @@ const UploadArea = ({ onImageUpload, uploadedImage }: UploadAreaProps) => {
   const handleFileInput = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
-      if (file) {
+      if (file && isValidMedicalImage(file)) {
         onImageUpload(file);
       }
     },
@@ -61,7 +78,7 @@ const UploadArea = ({ onImageUpload, uploadedImage }: UploadAreaProps) => {
       >
         <input
           type="file"
-          accept="image/*"
+          accept="image/*,.nii,.nii.gz,.hdr,.img"
           onChange={handleFileInput}
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
           id="file-upload"
@@ -95,7 +112,7 @@ const UploadArea = ({ onImageUpload, uploadedImage }: UploadAreaProps) => {
             </div>
             <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
               <ImageIcon className="w-4 h-4" />
-              <span>Supports: JPG, PNG, WEBP</span>
+              <span>Supports: JPG, PNG, WEBP, NII, NII.GZ, HDR/IMG</span>
             </div>
           </div>
         )}
