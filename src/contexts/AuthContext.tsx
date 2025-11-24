@@ -3,13 +3,14 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 interface User {
   fullName: string;
   email: string;
+  speciality?: string;
 }
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signup: (fullName: string, email: string, password: string) => Promise<void>;
+  signup: (fullName: string, email: string, password: string, speciality: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -28,14 +29,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  const signup = async (fullName: string, email: string, password: string) => {
+  const signup = async (fullName: string, email: string, password: string, speciality: string) => {
     // Mock signup - in production, connect to real API
     // TODO: Replace with real API call to /api/auth/signup
     
     // Simulate API delay
     await new Promise((resolve) => setTimeout(resolve, 500));
     
-    const newUser = { fullName, email };
+    const newUser = { fullName, email, speciality };
     localStorage.setItem("medtech_user", JSON.stringify(newUser));
     setUser(newUser);
     setIsAuthenticated(true);
