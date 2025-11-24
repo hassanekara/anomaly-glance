@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { User, Mail, Calendar, LogOut, Image as ImageIcon } from "lucide-react";
+import { User, Mail, Calendar, LogOut, Image as ImageIcon, Stethoscope, Clock } from "lucide-react";
 
 interface ScannedImage {
   id: string;
@@ -14,6 +14,7 @@ interface ScannedImage {
 interface DoctorProfileProps {
   doctorName: string;
   email: string;
+  speciality?: string;
   scannedImages: ScannedImage[];
   onLogout: () => void;
 }
@@ -29,7 +30,7 @@ interface DoctorProfileProps {
  * - List of all scanned images with results
  * - Logout functionality
  */
-const DoctorProfile = ({ doctorName, email, scannedImages, onLogout }: DoctorProfileProps) => {
+const DoctorProfile = ({ doctorName, email, speciality, scannedImages, onLogout }: DoctorProfileProps) => {
   return (
     <div className="space-y-6">
       {/* Profile Information Card */}
@@ -70,6 +71,19 @@ const DoctorProfile = ({ doctorName, email, scannedImages, onLogout }: DoctorPro
             </div>
           </div>
 
+          {/* Speciality */}
+          {speciality && (
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center">
+                <Stethoscope className="w-5 h-5 text-secondary" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Speciality</p>
+                <p className="font-medium text-foreground">{speciality}</p>
+              </div>
+            </div>
+          )}
+
           {/* Member Since */}
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center">
@@ -81,6 +95,61 @@ const DoctorProfile = ({ doctorName, email, scannedImages, onLogout }: DoctorPro
             </div>
           </div>
         </div>
+      </Card>
+
+      {/* Scan Comparison Timeline */}
+      <Card className="p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Clock className="w-5 h-5 text-primary" />
+          <h2 className="text-xl font-semibold text-foreground">Scan Comparison Timeline</h2>
+        </div>
+
+        {scannedImages.length < 2 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <Clock className="w-12 h-12 mx-auto mb-3 opacity-50" />
+            <p>Need at least 2 scans for comparison</p>
+            <p className="text-sm">Upload more images to track progress</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {scannedImages.slice().reverse().map((scan, index) => (
+              <div key={scan.id} className="flex gap-4">
+                {/* Timeline line */}
+                <div className="flex flex-col items-center">
+                  <div className={`w-3 h-3 rounded-full ${scan.result === "Anomaly" ? "bg-destructive" : "bg-success"}`} />
+                  {index < scannedImages.length - 1 && (
+                    <div className="w-0.5 h-full bg-border mt-2" />
+                  )}
+                </div>
+
+                {/* Scan info */}
+                <div className="flex-1 pb-6">
+                  <div className="flex items-start gap-4">
+                    <div className="w-24 h-24 rounded-lg overflow-hidden border border-border flex-shrink-0">
+                      <img src={scan.imageUrl} alt="Scan" className="w-full h-full object-cover" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Badge variant={scan.result === "Anomaly" ? "destructive" : "default"}>
+                          {scan.result}
+                        </Badge>
+                        <span className="text-sm text-muted-foreground">{scan.confidence}% confidence</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-1">{scan.date}</p>
+                      {index > 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          {scannedImages[scannedImages.length - index - 1].result === scan.result 
+                            ? "Status unchanged from previous scan" 
+                            : "Status changed from previous scan"}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </Card>
 
       {/* Scanned Images History */}

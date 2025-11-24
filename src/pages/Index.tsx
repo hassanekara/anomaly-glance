@@ -153,6 +153,7 @@ const Index = () => {
           <DoctorProfile
             doctorName={user?.fullName || ""}
             email={user?.email || ""}
+            speciality={user?.speciality}
             scannedImages={scannedImages}
             onLogout={() => setShowProfile(false)}
           />

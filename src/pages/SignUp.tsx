@@ -15,12 +15,14 @@ const SignUp = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [speciality, setSpeciality] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({
     fullName: "",
     email: "",
     password: "",
     confirmPassword: "",
+    speciality: "",
   });
 
   const validateForm = () => {
@@ -29,6 +31,7 @@ const SignUp = () => {
       email: "",
       password: "",
       confirmPassword: "",
+      speciality: "",
     };
     let isValid = true;
 
@@ -64,6 +67,11 @@ const SignUp = () => {
       isValid = false;
     }
 
+    if (!speciality) {
+      newErrors.speciality = "Please select a speciality";
+      isValid = false;
+    }
+
     setErrors(newErrors);
     return isValid;
   };
@@ -77,7 +85,7 @@ const SignUp = () => {
 
     setIsLoading(true);
     try {
-      await signup(fullName, email, password);
+      await signup(fullName, email, password, speciality);
       toast({
         title: "Account created!",
         description: "Welcome to MedTech Innovation.",
@@ -169,6 +177,25 @@ const SignUp = () => {
               />
               {errors.confirmPassword && (
                 <p className="text-sm text-destructive">{errors.confirmPassword}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="speciality">Speciality</Label>
+              <select
+                id="speciality"
+                value={speciality}
+                onChange={(e) => setSpeciality(e.target.value)}
+                className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ${errors.speciality ? "border-destructive" : ""}`}
+              >
+                <option value="">Select your speciality</option>
+                <option value="Neurologue">Neurologue</option>
+                <option value="Dermatologue">Dermatologue</option>
+                <option value="Ophtalmologue">Ophtalmologue</option>
+                <option value="Pneumologue">Pneumologue</option>
+              </select>
+              {errors.speciality && (
+                <p className="text-sm text-destructive">{errors.speciality}</p>
               )}
             </div>
 
